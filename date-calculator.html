@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线日期计算器</title>
+<style>
+  :root {
+    --primary: #4f6ef7;
+    --primary-light: #eef1ff;
+    --primary-dark: #3650d1;
+    --red: #f56c6c;
+    --red-bg: #fef0f0;
+    --orange: #e6a23c;
+    --orange-bg: #fdf6ec;
+    --green: #67c23a;
+    --green-bg: #f0f9eb;
+    --purple: #8b5cf6;
+    --purple-bg: #f5f3ff;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f5f7fa;
+    color: #2c3e50;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .container { max-width: 960px; width: 100%; }
+
+  header { text-align: center; padding: 30px 0 20px; }
+  header h1 {
+    font-size: 28px; font-weight: 700;
+    background: linear-gradient(135deg, var(--purple), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  header p { color: #7f8c9b; margin-top: 6px; font-size: 14px; }
+  header .nav-link {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--primary);
+    text-decoration: none;
+  }
+  header .nav-link:hover { text-decoration: underline; }
+
+  .card {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 28px;
+    margin-bottom: 20px;
+  }
+  .card-title {
+    font-size: 16px; font-weight: 600; margin-bottom: 18px;
+    color: #303133; display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .badge {
+    font-size: 11px; background: var(--primary-light); color: var(--primary);
+    padding: 2px 10px; border-radius: 10px; font-weight: 500;
+  }
+
+  /* Input Section */
+  .input-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+  }
+  .field {
+    flex: 1;
+    min-width: 160px;
+  }
+  .field label {
+    display: block;
+    font-size: 13px; font-weight: 500;
+    color: #606266; margin-bottom: 6px;
+  }
+  .field input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid #dcdfe6;
+    border-radius: 8px;
+    font-size: 15px;
+    color: #303133;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .field input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(79,110,247,0.15);
+  }
+  .field input.num-input { text-align: center; font-size: 20px; font-weight: 700; }
+
+  .quick-btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 6px;
+    flex-wrap: wrap;
+  }
+  .quick-btn {
+    padding: 4px 14px;
+    border: 1px solid #dcdfe6;
+    border-radius: 6px;
+    background: #f8f9fb;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: #606266;
+  }
+  .quick-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--primary-light);
+  }
+  .quick-btn.neg { color: var(--red); }
+  .quick-btn.neg:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: var(--red-bg);
+  }
+
+  .calc-btn {
+    padding: 10px 32px;
+    background: linear-gradient(135deg, var(--purple), var(--primary));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+    white-space: nowrap;
+    height: 42px;
+  }
+  .calc-btn:hover { opacity: 0.9; }
+  .calc-btn:active { transform: scale(0.97); }
+
+  .error-msg {
+    background: var(--red-bg);
+    color: var(--red);
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+  .error-msg.show { display: block; }
+
+  /* Result Hero */
+  .result-hero {
+    text-align: center;
+    padding: 28px 20px 24px;
+    background: linear-gradient(135deg, #f5f3ff, #eef1ff);
+    border-radius: 12px;
+    margin-bottom: 18px;
+  }
+  .result-hero .label { font-size: 13px; color: #7f8c9b; margin-bottom: 6px; }
+  .result-hero .big-date {
+    font-size: 36px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    background: linear-gradient(135deg, var(--purple), var(--primary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .result-hero .weekday {
+    font-size: 16px;
+    color: #606266;
+    margin-top: 4px;
+  }
+  .result-hero .sub {
+    font-size: 14px;
+    color: #909399;
+    margin-top: 10px;
+  }
+  .result-hero .sub strong { color: #303133; }
+
+  /* Stats grid */
+  .result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    text-align: center;
+    padding: 14px 8px;
+    border-radius: 10px;
+    background: #f8f9fb;
+  }
+  .stat-card .num { font-size: 22px; font-weight: 700; line-height: 1.3; }
+  .stat-card .label { font-size: 11px; color: #909399; margin-top: 3px; }
+  .stat-card.stat-workday .num { color: var(--primary); }
+  .stat-card.stat-holiday .num { color: var(--orange); }
+  .stat-card.stat-weekend .num { color: var(--green); }
+  .stat-card.stat-total .num { color: #303133; }
+  .stat-card.stat-adjusted .num { color: var(--red); }
+
+  /* Detail */
+  .detail-wrap {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
+  }
+  .detail-wrap::-webkit-scrollbar { width: 5px; }
+  .detail-wrap::-webkit-scrollbar-thumb { background: #dcdfe6; border-radius: 3px; }
+
+  table.detail {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table.detail th {
+    background: #f5f7fa;
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #606266;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 1px solid #ebeef5;
+  }
+  table.detail td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f2f3f5;
+  }
+  table.detail tr:hover td { background: #fafbfc; }
+  table.detail tr.row-result td {
+    background: #f0f9ff;
+    font-weight: 600;
+  }
+  table.detail tr.row-result td:first-child {
+    border-left: 3px solid var(--primary);
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .tag-workday { background: var(--primary-light); color: var(--primary); }
+  .tag-holiday { background: var(--orange-bg); color: var(--orange); }
+  .tag-weekend { background: var(--green-bg); color: var(--green); }
+  .tag-adjusted { background: var(--red-bg); color: var(--red); }
+  .tag-result { background: var(--purple-bg); color: var(--purple); }
+
+  /* Holiday reference */
+  .year-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 14px;
+    background: #f0f2f5;
+    border-radius: 8px;
+    padding: 3px;
+    width: fit-content;
+  }
+  .year-tab {
+    padding: 6px 20px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    color: #606266;
+    transition: all 0.2s;
+  }
+  .year-tab:hover { color: #303133; }
+  .year-tab.active {
+    background: #fff;
+    color: var(--primary);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .holiday-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .holiday-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: #f8f9fb;
+    border-radius: 8px;
+    font-size: 13px;
+    border-left: 3px solid var(--orange);
+  }
+  .holiday-item .name { font-weight: 600; color: #303133; min-width: 60px; }
+  .holiday-item .date { color: #606266; font-size: 12px; }
+  .holiday-item.holiday-adjust {
+    border-left-color: var(--red);
+    background: var(--red-bg);
+  }
+
+  footer {
+    text-align: center;
+    padding: 20px 0 10px;
+    color: #a8abb2;
+    font-size: 12px;
+  }
+
+  @media (max-width: 600px) {
+    body { padding: 12px; }
+    .card { padding: 18px; }
+    .input-row { flex-direction: column; gap: 12px; }
+    .field { min-width: auto; }
+    .calc-btn { width: 100%; }
+    .result-hero .big-date { font-size: 26px; }
+    .result-grid { grid-template-columns: repeat(2, 1fr); }
+    .holiday-group { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <header>
+    <h1>📅 在线日期计算器</h1>
+    <p>输入开始日期和工作日天数，自动推算目标日期 · 自动排除假期/周末，计入调休</p>
+    <a class="nav-link" href="workday-calculator.html" target="_blank">← 也看看工作日计算器（按日期区间算天数）</a>
+  </header>
+
+  <!-- ====== 输入区域 ====== -->
+  <div class="card">
+    <div class="card-title"><span>📆 输入参数</span></div>
+    <div class="input-row">
+      <div class="field">
+        <label for="startDate">开始日期</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="field" style="flex:0.7;min-width:140px;">
+        <label for="workdays">工作日天数 <span style="font-size:12px;color:#909399;">（正=未来，负=过去）</span></label>
+        <input type="number" id="workdays" class="num-input" value="1" step="1">
+        <div class="quick-btns">
+          <button class="quick-btn" onclick="setWorkdays(1)">+1</button>
+          <button class="quick-btn" onclick="setWorkdays(3)">+3</button>
+          <button class="quick-btn" onclick="setWorkdays(5)">+5</button>
+          <button class="quick-btn" onclick="setWorkdays(10)">+10</button>
+          <button class="quick-btn" onclick="setWorkdays(22)">+22</button>
+          <button class="quick-btn neg" onclick="setWorkdays(-1)">−1</button>
+          <button class="quick-btn neg" onclick="setWorkdays(-3)">−3</button>
+          <button class="quick-btn neg" onclick="setWorkdays(-5)">−5</button>
+          <button class="quick-btn neg" onclick="setWorkdays(-10)">−10</button>
+        </div>
+      </div>
+      <button class="calc-btn" onclick="calculate()">开始推算</button>
+    </div>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- ====== 计算结果 ====== -->
+  <div class="card" id="resultCard" style="display:none;">
+    <div class="card-title"><span>🎯 推算结果</span></div>
+    <div class="result-hero" id="resultHero"></div>
+    <div class="result-grid" id="resultGrid"></div>
+
+    <div>
+      <div class="card-title" style="margin-bottom:10px;">
+        <span>🛤️ 计算路径</span>
+        <span class="badge">共检查 <span id="pathCount">0</span> 天</span>
+      </div>
+      <div class="detail-wrap">
+        <table class="detail">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>星期</th>
+              <th>类型</th>
+              <th>累计工作日</th>
+            </tr>
+          </thead>
+          <tbody id="detailBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ====== 假期参考 ====== -->
+  <div class="card">
+    <div class="card-title">
+      <span>📖 法定假期参考</span>
+      <span class="badge">2025–2026</span>
+    </div>
+    <div class="year-tabs">
+      <button class="year-tab active" data-year="2025" onclick="switchYear('2025')">2025 年</button>
+      <button class="year-tab" data-year="2026" onclick="switchYear('2026')">2026 年</button>
+    </div>
+    <div id="holidayContent"></div>
+  </div>
+
+  <footer>
+    数据来源：国务院办公厅放假通知 · 支持范围 2025-01-01 至 2026-12-30 <br>
+    2026 年假期为预排安排，以官方正式通知为准
+  </footer>
+</div>
+
+<script>
+// ============================================================
+//  中国法定假期 & 调休数据 2025–2026
+// ============================================================
+const HOLIDAY_DATA = {
+  "2025": [
+    {
+      name: "元旦",
+      range: ["2025-01-01"],
+      days: 1,
+      adjust: []
+    },
+    {
+      name: "春节",
+      range: ["2025-01-28","2025-01-29","2025-01-30","2025-01-31","2025-02-01","2025-02-02","2025-02-03"],
+      days: 7,
+      adjust: [
+        { date: "2025-01-26", note: "1月26日（周日）上班" },
+        { date: "2025-02-08", note: "2月8日（周六）上班" }
+      ]
+    },
+    {
+      name: "清明节",
+      range: ["2025-04-04","2025-04-05","2025-04-06"],
+      days: 3,
+      adjust: []
+    },
+    {
+      name: "劳动节",
+      range: ["2025-05-01","2025-05-02","2025-05-03","2025-05-04","2025-05-05"],
+      days: 5,
+      adjust: [
+        { date: "2025-04-27", note: "4月27日（周日）上班" }
+      ]
+    },
+    {
+      name: "端午节",
+      range: ["2025-05-31","2025-06-01","2025-06-02"],
+      days: 3,
+      adjust: []
+    },
+    {
+      name: "中秋节·国庆节",
+      range: ["2025-10-01","2025-10-02","2025-10-03","2025-10-04","2025-10-05","2025-10-06","2025-10-07","2025-10-08"],
+      days: 8,
+      adjust: [
+        { date: "2025-09-28", note: "9月28日（周日）上班" },
+        { date: "2025-10-11", note: "10月11日（周六）上班" }
+      ]
+    }
+  ],
+  "2026": [
+    {
+      name: "元旦",
+      range: ["2026-01-01","2026-01-02","2026-01-03"],
+      days: 3,
+      adjust: []
+    },
+    {
+      name: "春节",
+      range: ["2026-02-16","2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21","2026-02-22"],
+      days: 7,
+      adjust: [
+        { date: "2026-02-14", note: "2月14日（周六）上班" },
+        { date: "2026-02-28", note: "2月28日（周六）上班" }
+      ]
+    },
+    {
+      name: "清明节",
+      range: ["2026-04-04","2026-04-05","2026-04-06"],
+      days: 3,
+      adjust: []
+    },
+    {
+      name: "劳动节",
+      range: ["2026-05-01","2026-05-02","2026-05-03","2026-05-04","2026-05-05"],
+      days: 5,
+      adjust: [
+        { date: "2026-04-26", note: "4月26日（周日）上班" }
+      ]
+    },
+    {
+      name: "端午节",
+      range: ["2026-06-19","2026-06-20","2026-06-21"],
+      days: 3,
+      adjust: []
+    },
+    {
+      name: "中秋节",
+      range: ["2026-09-27","2026-09-28","2026-09-29"],
+      days: 3,
+      adjust: [
+        { date: "2026-09-26", note: "9月26日（周六）上班" }
+      ]
+    },
+    {
+      name: "国庆节",
+      range: ["2026-10-01","2026-10-02","2026-10-03","2026-10-04","2026-10-05","2026-10-06","2026-10-07"],
+      days: 7,
+      adjust: [
+        { date: "2026-10-10", note: "10月10日（周六）上班" }
+      ]
+    }
+  ]
+};
+
+// Build lookup maps
+let HOLIDAY_SET = {};
+let ADJUST_SET = {};
+let HOLIDAY_NAME_MAP = {};
+
+function buildMaps() {
+  HOLIDAY_SET = {};
+  ADJUST_SET = {};
+  HOLIDAY_NAME_MAP = {};
+  for (const [year, holidays] of Object.entries(HOLIDAY_DATA)) {
+    HOLIDAY_SET[year] = new Set();
+    HOLIDAY_NAME_MAP[year] = {};
+    for (const h of holidays) {
+      for (const d of h.range) {
+        HOLIDAY_SET[year].add(d);
+        HOLIDAY_NAME_MAP[year][d] = h.name;
+      }
+    }
+    ADJUST_SET[year] = new Set();
+    for (const h of holidays) {
+      for (const a of (h.adjust || [])) {
+        ADJUST_SET[year].add(a.date);
+      }
+    }
+  }
+}
+buildMaps();
+
+const WEEKDAY_NAMES = ["周日","周一","周二","周三","周四","周五","周六"];
+const DATE_MIN = "2025-01-01";
+const DATE_MAX = "2026-12-30";
+
+function isWeekend(dateStr) {
+  const d = new Date(dateStr);
+  return d.getDay() === 0 || d.getDay() === 6;
+}
+
+function getDayType(dateStr) {
+  const year = dateStr.slice(0,4);
+  if (ADJUST_SET[year] && ADJUST_SET[year].has(dateStr)) {
+    return { type: "adjusted", label: "调休上班", tagClass: "tag-adjusted" };
+  }
+  if (HOLIDAY_SET[year] && HOLIDAY_SET[year].has(dateStr)) {
+    const name = HOLIDAY_NAME_MAP[year][dateStr] || "法定假期";
+    return { type: "holiday", label: name, tagClass: "tag-holiday" };
+  }
+  if (isWeekend(dateStr)) {
+    return { type: "weekend", label: "周末休息", tagClass: "tag-weekend" };
+  }
+  return { type: "workday", label: "工作日", tagClass: "tag-workday" };
+}
+
+function isWorkday(dateStr) {
+  const t = getDayType(dateStr);
+  return t.type === "workday" || t.type === "adjusted";
+}
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateCN(d) {
+  const [, m, day] = d.split("-");
+  return `${parseInt(m)}月${parseInt(day)}日`;
+}
+
+// ============================================================
+//  核心推算
+// ============================================================
+function calculate() {
+  const startStr = document.getElementById("startDate").value;
+  const workdayInput = document.getElementById("workdays").value;
+  const errEl = document.getElementById("errorMsg");
+  errEl.classList.remove("show");
+  errEl.textContent = "";
+
+  // Validation
+  if (!startStr) {
+    showError("请选择开始日期");
+    return;
+  }
+  if (workdayInput === "" || workdayInput === null) {
+    showError("请输入工作日天数");
+    return;
+  }
+  const workdayTarget = parseInt(workdayInput, 10);
+  if (isNaN(workdayTarget)) {
+    showError("工作日天数必须为整数");
+    return;
+  }
+
+  // Range check: start must be within [2025-01-01, 2026-12-30]
+  if (startStr < DATE_MIN || startStr > DATE_MAX) {
+    showError("开始日期超出支持范围（2025-01-01 至 2026-12-30）");
+    return;
+  }
+
+  // Handle zero
+  if (workdayTarget === 0) {
+    renderZeroResult(startStr);
+    document.getElementById("resultCard").style.display = "block";
+    return;
+  }
+
+  const direction = workdayTarget > 0 ? 1 : -1;
+  let remaining = Math.abs(workdayTarget);
+  const path = [];
+  const cur = new Date(startStr);
+
+  let regularCounted = 0;
+  let adjustedCounted = 0;
+  let holidaysSkipped = 0;
+  let weekendsSkipped = 0;
+  let workdaysCounted = 0;
+  let calendarDays = 0;
+
+  // Safety: prevent infinite loop (max ~730 days for 2 years)
+  while (remaining > 0 && calendarDays < 1000) {
+    cur.setDate(cur.getDate() + direction);
+    const ds = formatDate(cur);
+    calendarDays++;
+
+    // Range check
+    if (ds < DATE_MIN) {
+      showError("推算结果超出支持范围（早于2025-01-01），请减少工作日天数");
+      return;
+    }
+    if (ds > DATE_MAX) {
+      showError("推算结果超出支持范围（晚于2026-12-30），请减少工作日天数");
+      return;
+    }
+
+    const dayType = getDayType(ds);
+    const entry = {
+      date: ds,
+      weekday: WEEKDAY_NAMES[cur.getDay()],
+      type: dayType.type,
+      label: dayType.label,
+      tagClass: dayType.tagClass,
+      runningCount: workdaysCounted, // before counting this day
+      isWorkday: false
+    };
+
+    if (dayType.type === "workday") {
+      regularCounted++;
+      workdaysCounted++;
+      remaining--;
+      entry.runningCount = workdaysCounted;
+      entry.isWorkday = true;
+    } else if (dayType.type === "adjusted") {
+      adjustedCounted++;
+      workdaysCounted++;
+      remaining--;
+      entry.runningCount = workdaysCounted;
+      entry.isWorkday = true;
+    } else if (dayType.type === "holiday") {
+      holidaysSkipped++;
+    } else if (dayType.type === "weekend") {
+      weekendsSkipped++;
+    }
+
+    path.push(entry);
+  }
+
+  if (calendarDays >= 1000) {
+    showError("计算超限，请检查输入天数是否过大");
+    return;
+  }
+
+  const resultDate = formatDate(cur);
+  const resultWeekday = WEEKDAY_NAMES[cur.getDay()];
+
+  // Show result
+  const stats = {
+    calendarDays,
+    workdayTarget: Math.abs(workdayTarget),
+    regularCounted,
+    adjustedCounted,
+    holidaysSkipped,
+    weekendsSkipped,
+    workdaysCounted
+  };
+
+  renderResult(startStr, resultDate, resultWeekday, stats);
+  renderPath(path, resultDate);
+  document.getElementById("resultCard").style.display = "block";
+}
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.textContent = msg;
+  el.classList.add("show");
+}
+
+function setWorkdays(n) {
+  document.getElementById("workdays").value = n;
+  // Auto-calculate when quick button is clicked
+  calculate();
+}
+
+// ============================================================
+//  渲染
+// ============================================================
+function renderResult(startStr, resultDate, weekday, stats) {
+  // Hero
+  const hero = document.getElementById("resultHero");
+  const startCN = formatDateCN(startStr);
+  const resultCN = formatDateCN(resultDate);
+  const direction = stats.workdayTarget;
+  const dirText = direction > 0
+    ? `从 ${startCN} 往后数 <strong>${direction}</strong> 个工作日`
+    : `从 ${startCN} 往前数 <strong>${Math.abs(direction)}</strong> 个工作日`;
+
+  hero.innerHTML = `
+    <div class="label">${dirText}</div>
+    <div class="big-date">${resultDate} ${weekday}</div>
+    <div class="sub">共检查 <strong>${stats.calendarDays}</strong> 天日历 · 其中排除 <strong>${stats.holidaysSkipped}</strong> 天假期 · <strong>${stats.weekendsSkipped}</strong> 天周末</div>
+  `;
+
+  // Stats grid
+  const grid = document.getElementById("resultGrid");
+  grid.innerHTML = `
+    <div class="stat-card stat-total">
+      <div class="num">${stats.calendarDays}</div>
+      <div class="label">检查日历天数</div>
+    </div>
+    <div class="stat-card stat-workday">
+      <div class="num">${stats.workdayTarget}</div>
+      <div class="label">目标工作日</div>
+    </div>
+    <div class="stat-card stat-workday">
+      <div class="num">${stats.regularCounted}</div>
+      <div class="label">普通工作日</div>
+    </div>
+    <div class="stat-card stat-adjusted">
+      <div class="num">${stats.adjustedCounted}</div>
+      <div class="label">含调休日</div>
+    </div>
+    <div class="stat-card stat-holiday">
+      <div class="num">${stats.holidaysSkipped}</div>
+      <div class="label">跳过假期</div>
+    </div>
+    <div class="stat-card stat-weekend">
+      <div class="num">${stats.weekendsSkipped}</div>
+      <div class="label">跳过周末</div>
+    </div>
+  `;
+}
+
+function renderZeroResult(startStr) {
+  const hero = document.getElementById("resultHero");
+  const startCN = formatDateCN(startStr);
+  const d = new Date(startStr);
+  hero.innerHTML = `
+    <div class="label">工作日天数为 0，结果等于起始日期</div>
+    <div class="big-date">${startStr} ${WEEKDAY_NAMES[d.getDay()]}</div>
+    <div class="sub">无需推算</div>
+  `;
+  document.getElementById("resultGrid").innerHTML = "";
+  document.getElementById("detailBody").innerHTML = "";
+  document.getElementById("pathCount").textContent = "0";
+}
+
+function renderPath(path, resultDate) {
+  const tbody = document.getElementById("detailBody");
+  const count = document.getElementById("pathCount");
+  count.textContent = path.length;
+
+  tbody.innerHTML = path.map(d => {
+    const isResult = d.date === resultDate;
+    const countDisplay = d.isWorkday ? `<strong>${d.runningCount}</strong>` : "—";
+    const rowClass = isResult ? ' class="row-result"' : '';
+    return `<tr${rowClass}>
+      <td>${d.date}${isResult ? ' ✅' : ''}</td>
+      <td>${d.weekday}</td>
+      <td><span class="tag ${d.tagClass}">${d.label}</span></td>
+      <td>${countDisplay}</td>
+    </tr>`;
+  }).join("");
+}
+
+// ============================================================
+//  假期参考
+// ============================================================
+function switchYear(year) {
+  document.querySelectorAll(".year-tab").forEach(t => t.classList.remove("active"));
+  document.querySelector(`.year-tab[data-year="${year}"]`).classList.add("active");
+  renderHolidayTable(year);
+}
+
+function renderHolidayTable(year) {
+  const el = document.getElementById("holidayContent");
+  const holidays = HOLIDAY_DATA[year];
+  if (!holidays) { el.innerHTML = ""; return; }
+
+  let html = '<div class="holiday-group">';
+  for (const h of holidays) {
+    const startDay = h.range[0];
+    const endDay = h.range[h.range.length - 1];
+    const dateStr = h.range.length === 1
+      ? formatDateCN(startDay)
+      : `${formatDateCN(startDay)} - ${formatDateCN(endDay)}`;
+
+    html += `
+      <div class="holiday-item">
+        <span class="name">${h.name}</span>
+        <span class="date">${dateStr}（${h.days}天）</span>
+      </div>`;
+
+    for (const a of (h.adjust || [])) {
+      html += `
+        <div class="holiday-item holiday-adjust" style="margin-left:26px;border-left-width:2px;padding:6px 12px;">
+          <span style="font-size:12px;">🔁 调休</span>
+          <span class="date">${a.note}</span>
+        </div>`;
+    }
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// ============================================================
+//  初始化
+// ============================================================
+(function init() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const d = now.getDate();
+  document.getElementById("startDate").value = formatDate(now);
+  document.getElementById("workdays").value = 1;
+  renderHolidayTable("2025");
+})();
+
+</script>
+</body>
+</html>
