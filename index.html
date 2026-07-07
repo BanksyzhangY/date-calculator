@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>在线日期工具集</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #eef1ff 100%);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .container { max-width: 700px; width: 100%; text-align: center; }
+  h1 {
+    font-size: 32px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #8b5cf6, #4f6ef7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 8px;
+  }
+  .subtitle { color: #7f8c9b; font-size: 15px; margin-bottom: 36px; }
+  .card-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (max-width: 500px) {
+    .card-grid { grid-template-columns: 1fr; }
+  }
+  .card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px 24px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.07);
+    text-decoration: none;
+    color: #2c3e50;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 30px rgba(79,110,247,0.15);
+  }
+  .card .icon { font-size: 48px; margin-bottom: 14px; }
+  .card h2 { font-size: 20px; margin-bottom: 8px; }
+  .card p { font-size: 13px; color: #909399; line-height: 1.6; }
+  .card .tag {
+    margin-top: 14px;
+    font-size: 11px;
+    padding: 3px 14px;
+    border-radius: 10px;
+    font-weight: 500;
+  }
+  .card .tag.purple { background: #f5f3ff; color: #8b5cf6; }
+  .card .tag.blue { background: #eef1ff; color: #4f6ef7; }
+  footer {
+    margin-top: 40px;
+    color: #a8abb2;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📅 在线日期工具集</h1>
+  <p class="subtitle">自动识别 2025–2026 年中国法定假期 · 支持调休</p>
+  <div class="card-grid">
+    <a class="card" href="date-calculator.html">
+      <div class="icon">🎯</div>
+      <h2>日期计算器</h2>
+      <p>输入开始日期 + 工作日天数<br>推算未来的（或过去的）具体日期</p>
+      <span class="tag blue">开始日期 → 工作日天数 → 目标日期</span>
+    </a>
+    <a class="card" href="workday-calculator.html">
+      <div class="icon">📊</div>
+      <h2>工作日计算器</h2>
+      <p>输入开始和结束日期<br>计算区间内总共有多少个工作日</p>
+      <span class="tag purple">开始日期 → 结束日期 → 工作日统计</span>
+    </a>
+  </div>
+  <footer>
+    数据来源：国务院办公厅放假通知 · 2026 年假期为预排安排，以官方正式通知为准
+  </footer>
+</div>
+</body>
+</html>
